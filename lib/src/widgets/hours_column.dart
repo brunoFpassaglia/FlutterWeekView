@@ -62,20 +62,35 @@ class HoursColumn extends StatelessWidget {
       color: style.decoration == null ? style.color : null,
       decoration: style.decoration,
       child: Stack(
-        children: _sideTimes
-            .map(
-              (time) => Positioned(
-                top: topOffsetCalculator(time) -
-                    ((style.textStyle.fontSize ?? 14) / 2),
-                left: 0,
-                right: 0,
-                child: Align(
-                  alignment: style.textAlignment,
-                  child: hoursColumnTimeBuilder(style, time),
+        children: _sideTimes.asMap().entries.map(
+          (time) {
+            if (time.key == 0 || time.key == _sideTimes.length - 1) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Positioned(
+                  top: topOffsetCalculator(time.value) -
+                      ((style.textStyle.fontSize ?? 14) / 2),
+                  left: 0,
+                  right: 0,
+                  child: Align(
+                    alignment: style.textAlignment,
+                    child: hoursColumnTimeBuilder(style, time.value),
+                  ),
                 ),
+              );
+            }
+            return Positioned(
+              top: topOffsetCalculator(time.value) -
+                  ((style.textStyle.fontSize ?? 14) / 2),
+              left: 0,
+              right: 0,
+              child: Align(
+                alignment: style.textAlignment,
+                child: hoursColumnTimeBuilder(style, time.value),
               ),
-            )
-            .toList(),
+            );
+          },
+        ).toList(),
       ),
     );
 
