@@ -73,10 +73,15 @@ class HoursColumn extends StatelessWidget {
                     alignment: style.textAlignment,
                     // child: hoursColumnTimeBuilder(style, time),
                     child: time == minimumTime || time == maximumTime
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: hoursColumnTimeBuilder(style, time),
-                          )
+                        ? time == minimumTime
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 6.0),
+                                child: hoursColumnTimeBuilder(style, time),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.only(bottom: 6.0),
+                                child: hoursColumnTimeBuilder(style, time),
+                              )
                         : hoursColumnTimeBuilder(style, time)),
               ),
             )
