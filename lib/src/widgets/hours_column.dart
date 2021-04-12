@@ -79,7 +79,7 @@ class HoursColumn extends StatelessWidget {
                                 child: hoursColumnTimeBuilder(style, time),
                               )
                             : Padding(
-                                padding: const EdgeInsets.only(bottom: 11.0),
+                                padding: const EdgeInsets.only(top: -6.0),
                                 child: hoursColumnTimeBuilder(style, time),
                               )
                         : hoursColumnTimeBuilder(style, time)),
