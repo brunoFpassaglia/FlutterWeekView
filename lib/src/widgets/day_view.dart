@@ -190,7 +190,6 @@ class _DayViewState extends ZoomableHeadersWidgetState<DayView> {
         ),
       );
     }
-
     return Padding(
       padding: EdgeInsets.only(top: widget.style.headerSize),
       child: mainWidget,
@@ -199,10 +198,13 @@ class _DayViewState extends ZoomableHeadersWidgetState<DayView> {
 
   /// Creates the background widgets that should be added to a stack.
   Widget createBackground() => Positioned.fill(
-        child: CustomPaint(
-          painter: widget.style.createBackgroundPainter(
-            dayView: widget,
-            topOffsetCalculator: calculateTopOffset,
+        child: InkWell(
+          onTap: () => (widget.onDayBarTappedDown ?? (date) {})(widget.date),
+          child: CustomPaint(
+            painter: widget.style.createBackgroundPainter(
+              dayView: widget,
+              topOffsetCalculator: calculateTopOffset,
+            ),
           ),
         ),
       );

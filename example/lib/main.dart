@@ -108,6 +108,7 @@ class _DemoDayView extends StatelessWidget {
     return DayView(
       initialTime: const HourMinute(hour: 7),
       date: now,
+      onDayBarTappedDown: (date) => print(date),
       events: [
         FlutterWeekViewEvent(
           title: 'An event 1',
