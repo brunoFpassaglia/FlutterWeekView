@@ -285,6 +285,7 @@ class _WeekViewState extends ZoomableHeadersWidgetState<WeekView> {
       padding: EdgeInsets.only(top: widget.style.headerSize),
       width: dayViewWidth,
       child: DayView(
+        onDayBarTappedDown: widget.onDayBarTappedDown,
         date: date,
         events: widget.events,
         style: widget.dayViewStyleBuilder(date).copyWith(headerSize: 0),
@@ -371,7 +372,7 @@ class _AutoScrollDayBar extends StatefulWidget {
   /// Creates a new positioned day bar instance.
   _AutoScrollDayBar({
     required _WeekViewState state,
-  })   : weekView = state.widget,
+  })  : weekView = state.widget,
         dayViewWidth = state.dayViewWidth!,
         stateScrollController = state.horizontalScrollController!,
         dayBarStyleBuilder = state.widget.dayBarStyleBuilder;

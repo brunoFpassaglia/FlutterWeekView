@@ -156,6 +156,7 @@ class _DemoWeekView extends StatelessWidget {
     DateTime now = DateTime.now();
     DateTime date = DateTime(now.year, now.month, now.day);
     return WeekView(
+      onDayBarTappedDown: (date) => print(date),
       initialTime: const HourMinute(hour: 7).atDate(DateTime.now()),
       dates: [
         date.subtract(const Duration(days: 1)),
