@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_week_view/flutter_week_view.dart';
-import 'package:url_launcher/url_launcher.dart' as launcher;
+// import 'package:url_launcher/url_launcher.dart' as launcher;
 
 /// First plugin test method.
 void main() => runApp(_FlutterWeekViewDemoApp());
@@ -79,9 +79,9 @@ class _FlutterWeekViewDemoAppBody extends StatelessWidget {
             ),
             GestureDetector(
               onTap: () async {
-                if (await launcher.canLaunch(github)) {
-                  await launcher.launch(github);
-                }
+                // if (await launcher.canLaunch(github)) {
+                //   await launcher.launch(github);
+                // }
               },
               child: Text(
                 github,
