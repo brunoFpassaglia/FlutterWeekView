@@ -63,6 +63,7 @@ class WeekView
     HoursColumnTimeBuilder? hoursColumnTimeBuilder,
     HoursColumnTapCallback? onHoursColumnTappedDown,
     DayBarTapCallback? onDayBarTappedDown,
+    bool? isRTL,
   }) : this.builder(
           events: events,
           dateCount: dates.length,
@@ -74,6 +75,7 @@ class WeekView
           hoursColumnStyle: hoursColumnStyle,
           controller: controller,
           inScrollableWidget: inScrollableWidget,
+          isRTL: isRTL,
           minimumTime: minimumTime,
           maximumTime: maximumTime,
           initialTime: initialTime,
@@ -95,6 +97,7 @@ class WeekView
     HoursColumnStyle? hoursColumnStyle,
     WeekViewController? controller,
     bool? inScrollableWidget,
+    bool? isRTL,
     HourMinute? minimumTime,
     HourMinute? maximumTime,
     DateTime? initialTime,
@@ -115,8 +118,9 @@ class WeekView
           hoursColumnStyle: hoursColumnStyle ?? const HoursColumnStyle(),
           controller: controller ?? WeekViewController(),
           inScrollableWidget: inScrollableWidget ?? true,
-          minimumTime: minimumTime ?? HourMinute.MIN,
-          maximumTime: maximumTime ?? HourMinute.MAX,
+          isRTL: isRTL ?? false,
+          minimumTime: minimumTime ?? HourMinute.min,
+          maximumTime: maximumTime ?? HourMinute.max,
           initialTime: initialTime ?? DateTime.now(),
           userZoomable: userZoomable ?? true,
           currentTimeIndicatorBuilder: currentTimeIndicatorBuilder ??
@@ -229,7 +233,7 @@ class _WeekViewState extends ZoomableHeadersWidgetState<WeekView> {
 
     if (isZoomable) {
       mainWidget = GestureDetector(
-        onScaleStart: (_) => widget.controller.scaleStart(),
+        onScaleStart: widget.controller.scaleStart,
         onScaleUpdate: widget.controller.scaleUpdate,
         child: mainWidget,
       );
@@ -240,8 +244,8 @@ class _WeekViewState extends ZoomableHeadersWidgetState<WeekView> {
         mainWidget,
         Positioned(
           top: 0,
-          left: widget.hoursColumnStyle.width,
-          right: 0,
+          left: widget.isRTL ? 0 : widget.hoursColumnStyle.width,
+          right: widget.isRTL ? widget.hoursColumnStyle.width : 0,
           child: _AutoScrollDayBar(state: this),
         ),
         Container(
@@ -259,7 +263,9 @@ class _WeekViewState extends ZoomableHeadersWidgetState<WeekView> {
           SizedBox(
             height: calculateHeight() + widget.style.headerSize,
             child: ListView.builder(
-              padding: EdgeInsets.only(left: widget.hoursColumnStyle.width),
+              padding: EdgeInsets.only(
+                  left: widget.isRTL ? 0 : widget.hoursColumnStyle.width,
+                  right: widget.isRTL ? widget.hoursColumnStyle.width : 0),
               controller: horizontalScrollController,
               scrollDirection: Axis.horizontal,
               physics: widget.inScrollableWidget
@@ -286,6 +292,7 @@ class _WeekViewState extends ZoomableHeadersWidgetState<WeekView> {
       width: dayViewWidth,
       child: DayView(
         onDayBarTappedDown: widget.onDayBarTappedDown,
+        isRTL: widget.isRTL,
         date: date,
         events: widget.events,
         style: widget.dayViewStyleBuilder(date).copyWith(headerSize: 0),
@@ -343,8 +350,12 @@ class _WeekViewState extends ZoomableHeadersWidgetState<WeekView> {
       return;
     }
 
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      double widgetWidth = (context.findRenderObject() as RenderBox).size.width;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final double? widgetWidth =
+          (context.findRenderObject() as RenderBox?)?.size.width;
+      if (widgetWidth == null) {
+        return;
+      }
       this.setState(() {
         dayViewWidth = widgetWidth - widget.hoursColumnStyle.width;
         if (andScrollToCurrentTime) {
@@ -395,7 +406,7 @@ class _AutoScrollDayBarState extends State<_AutoScrollDayBar> {
     widget.stateScrollController.addListener(updateScrollPosition);
 
     WidgetsBinding.instance
-        ?.scheduleFrameCallback((_) => updateScrollPosition());
+        .scheduleFrameCallback((_) => updateScrollPosition());
   }
 
   @override

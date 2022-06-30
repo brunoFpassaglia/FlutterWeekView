@@ -24,6 +24,9 @@ abstract class ZoomController {
   /// The current zoom factor.
   double _zoomFactor = 1;
 
+  /// For maintain the position of the pinch focal point position (vertical)
+  double contentOffset = 0.0;
+
   /// Creates a zoom controller instance.
   ZoomController({
     double zoomCoefficient = 0.8,
@@ -31,7 +34,7 @@ abstract class ZoomController {
     double? maxZoom,
   })  : zoomCoefficient = math.max(0, zoomCoefficient),
         minZoom = math.max(0, minZoom ?? 0.4),
-        maxZoom = math.max(0, minZoom ?? 1.6) {
+        maxZoom = math.max(0, maxZoom ?? 1.6) {
     assert(this.minZoom <= this.maxZoom);
   }
 
@@ -57,7 +60,13 @@ abstract class ZoomController {
   }
 
   /// Should be called when the scale operation start.
-  void scaleStart() => previousZoomFactor = zoomFactor;
+  void scaleStart(ScaleStartDetails details) {
+    previousZoomFactor = zoomFactor;
+
+    for (ZoomControllerListener listener in _listeners) {
+      listener.onZoomStart(this, details);
+    }
+  }
 
   /// Should be called when the scale operation has an update.
   void scaleUpdate(ScaleUpdateDetails details) =>
@@ -81,8 +90,9 @@ abstract class ZoomController {
       _zoomFactor = zoomFactor;
       if (notify) {
         details ??= ScaleUpdateDetails(scale: scale);
-        _listeners.forEach(
-            (listener) => listener.onZoomFactorChanged(this, details!));
+        for (ZoomControllerListener listener in _listeners) {
+          listener.onZoomFactorChanged(this, details);
+        }
       }
     }
   }
@@ -96,6 +106,10 @@ abstract class ZoomController {
 
 /// A day view controller listener.
 mixin ZoomControllerListener {
+  /// Triggered when the day view zoom start
+  void onZoomStart(
+      covariant ZoomController controller, ScaleStartDetails details);
+
   /// Triggered when the day view zoom factor has changed.
   void onZoomFactorChanged(
       covariant ZoomController controller, ScaleUpdateDetails details);

@@ -35,12 +35,14 @@ class DayView extends ZoomableHeadersWidget<DayViewStyle, DayViewController> {
     DayBarStyle? dayBarStyle,
     DayViewController? controller,
     bool? inScrollableWidget,
+    bool? isRTL,
     HourMinute? minimumTime,
     HourMinute? maximumTime,
     HourMinute? initialTime,
     bool? userZoomable,
     CurrentTimeIndicatorBuilder? currentTimeIndicatorBuilder,
     HoursColumnTimeBuilder? hoursColumnTimeBuilder,
+    HoursColumnBackgroundBuilder? hoursColumnBackgroundBuilder,
     HoursColumnTapCallback? onHoursColumnTappedDown,
     DayBarTapCallback? onDayBarTappedDown,
   })  : events = events ?? [],
@@ -51,14 +53,16 @@ class DayView extends ZoomableHeadersWidget<DayViewStyle, DayViewController> {
           hoursColumnStyle: hoursColumnStyle ?? const HoursColumnStyle(),
           controller: controller ?? DayViewController(),
           inScrollableWidget: inScrollableWidget ?? true,
-          minimumTime: minimumTime ?? HourMinute.MIN,
-          maximumTime: maximumTime ?? HourMinute.MAX,
+          isRTL: isRTL ?? false,
+          minimumTime: minimumTime ?? HourMinute.min,
+          maximumTime: maximumTime ?? HourMinute.max,
           initialTime: initialTime?.atDate(date) ??
               (Utils.sameDay(date) ? HourMinute.now() : const HourMinute())
                   .atDate(date),
           userZoomable: userZoomable ?? true,
           hoursColumnTimeBuilder: hoursColumnTimeBuilder ??
               DefaultBuilders.defaultHoursColumnTimeBuilder,
+          hoursColumnBackgroundBuilder: hoursColumnBackgroundBuilder,
           currentTimeIndicatorBuilder: currentTimeIndicatorBuilder ??
               DefaultBuilders.defaultCurrentTimeIndicatorBuilder,
           onHoursColumnTappedDown: onHoursColumnTappedDown,
@@ -83,7 +87,7 @@ class _DayViewState extends ZoomableHeadersWidgetState<DayView> {
     super.initState();
     scheduleScrollToInitialTime();
     reset();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         setState(createEventsDrawProperties);
       }
@@ -111,8 +115,8 @@ class _DayViewState extends ZoomableHeadersWidgetState<DayView> {
           mainWidget,
           Positioned(
             top: 0,
-            left: widget.hoursColumnStyle.width,
-            right: 0,
+            left: widget.isRTL ? 0 : widget.hoursColumnStyle.width,
+            right: widget.isRTL ? widget.hoursColumnStyle.width : 0,
             child: DayBar.fromHeadersWidgetState(
               parent: widget,
               date: widget.date,
@@ -134,7 +138,7 @@ class _DayViewState extends ZoomableHeadersWidgetState<DayView> {
     }
 
     return GestureDetector(
-      onScaleStart: (_) => widget.controller.scaleStart(),
+      onScaleStart: widget.controller.scaleStart,
       onScaleUpdate: widget.controller.scaleUpdate,
       child: mainWidget,
     );
@@ -161,7 +165,7 @@ class _DayViewState extends ZoomableHeadersWidgetState<DayView> {
     if (widget.hoursColumnStyle.width > 0) {
       children.add(Positioned(
         top: 0,
-        left: 0,
+        left: widget.isRTL ? null : 0,
         child: HoursColumn.fromHeadersWidgetState(parent: this),
       ));
     }
@@ -170,8 +174,8 @@ class _DayViewState extends ZoomableHeadersWidgetState<DayView> {
         widget.minimumTime.atDate(widget.date).isBefore(DateTime.now()) &&
         widget.maximumTime.atDate(widget.date).isAfter(DateTime.now())) {
       Widget? currentTimeIndicator = (widget.currentTimeIndicatorBuilder ??
-              DefaultBuilders.defaultCurrentTimeIndicatorBuilder)(
-          widget.style, calculateTopOffset, widget.hoursColumnStyle.width);
+              DefaultBuilders.defaultCurrentTimeIndicatorBuilder)(widget.style,
+          calculateTopOffset, widget.hoursColumnStyle.width, widget.isRTL);
       if (currentTimeIndicator != null) {
         children.add(currentTimeIndicator);
       }
@@ -219,8 +223,8 @@ class _DayViewState extends ZoomableHeadersWidgetState<DayView> {
   void createEventsDrawProperties() {
     EventGrid eventsGrid = EventGrid();
     for (FlutterWeekViewEvent event in List.of(events)) {
-      EventDrawProperties drawProperties =
-          eventsDrawProperties[event] ?? EventDrawProperties(widget, event);
+      EventDrawProperties drawProperties = eventsDrawProperties[event] ??
+          EventDrawProperties(widget, event, widget.isRTL);
       if (!drawProperties.shouldDraw) {
         events.remove(event);
         continue;

@@ -27,35 +27,70 @@ class HoursColumn extends StatelessWidget {
   /// Building method for building the time displayed on the side border.
   final HoursColumnTimeBuilder hoursColumnTimeBuilder;
 
+  /// Building method for building background decoration below single time displayed on the side border.
+  final HoursColumnBackgroundBuilder? hoursColumnBackgroundBuilder;
+
   /// Creates a new hours column instance.
   HoursColumn({
-    this.minimumTime = HourMinute.MIN,
-    this.maximumTime = HourMinute.MAX,
+    Key? key,
+    this.minimumTime = HourMinute.min,
+    this.maximumTime = HourMinute.max,
     TopOffsetCalculator? topOffsetCalculator,
     this.style = const HoursColumnStyle(),
     this.onHoursColumnTappedDown,
     HoursColumnTimeBuilder? hoursColumnTimeBuilder,
+    this.hoursColumnBackgroundBuilder,
   })  : assert(minimumTime < maximumTime),
         topOffsetCalculator =
             topOffsetCalculator ?? DefaultBuilders.defaultTopOffsetCalculator,
         hoursColumnTimeBuilder = hoursColumnTimeBuilder ??
             DefaultBuilders.defaultHoursColumnTimeBuilder,
-        _sideTimes = getSideTimes(minimumTime, maximumTime, style.interval);
+        _sideTimes = getSideTimes(minimumTime, maximumTime, style.interval),
+        super(key: key);
 
-  /// Creates a new hours column instance from a headers widget instance.
+  /// Creates a new h, super(key: key)ours column instance from a headers widget instance.
   HoursColumn.fromHeadersWidgetState({
+    Key? key,
     required ZoomableHeadersWidgetState parent,
   }) : this(
+          key: key,
           minimumTime: parent.widget.minimumTime,
           maximumTime: parent.widget.maximumTime,
           topOffsetCalculator: parent.calculateTopOffset,
           style: parent.widget.hoursColumnStyle,
           onHoursColumnTappedDown: parent.widget.onHoursColumnTappedDown,
           hoursColumnTimeBuilder: parent.widget.hoursColumnTimeBuilder,
+          hoursColumnBackgroundBuilder:
+              parent.widget.hoursColumnBackgroundBuilder,
         );
 
   @override
   Widget build(BuildContext context) {
+    final singleHourSize =
+        topOffsetCalculator(maximumTime) / (maximumTime.hour);
+    final Widget background;
+    if (hoursColumnBackgroundBuilder != null) {
+      background = SizedBox(
+        height: topOffsetCalculator(maximumTime),
+        width: style.width,
+        child: Padding(
+          padding: EdgeInsets.only(top: singleHourSize),
+          child: Column(
+            children: _sideTimes
+                .map(
+                  (time) => Container(
+                    decoration: hoursColumnBackgroundBuilder!(time),
+                    height: singleHourSize,
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      );
+    } else {
+      background = const SizedBox.shrink();
+    }
+
     Widget child = Container(
       height: topOffsetCalculator(maximumTime),
       width: style.width,

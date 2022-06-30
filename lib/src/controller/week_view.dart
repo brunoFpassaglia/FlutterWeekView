@@ -35,23 +35,28 @@ class WeekViewController extends ZoomController {
   }
 
   @override
-  void scaleStart() {
-    super.scaleStart();
-    _dayViewControllers.values.forEach((controller) => controller.scaleStart());
+  void scaleStart(ScaleStartDetails details) {
+    super.scaleStart(details);
+    for (DayViewController controller in _dayViewControllers.values) {
+      controller.scaleStart(details);
+    }
   }
 
   @override
   void changeZoomFactor(double zoomFactor,
       {bool notify = true, ScaleUpdateDetails? details}) {
     super.changeZoomFactor(zoomFactor, notify: notify, details: details);
-    _dayViewControllers.values.forEach((controller) => controller
-        .changeZoomFactor(zoomFactor, notify: notify, details: details));
+    for (DayViewController controller in _dayViewControllers.values) {
+      controller.changeZoomFactor(zoomFactor, notify: notify, details: details);
+    }
   }
 
   @override
   void dispose() {
     super.dispose();
-    _dayViewControllers.values.forEach((controller) => controller.dispose());
+    for (DayViewController controller in _dayViewControllers.values) {
+      controller.dispose();
+    }
     _dayViewControllers.clear();
   }
 

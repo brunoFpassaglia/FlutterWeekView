@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_week_view/flutter_week_view.dart';
 import 'package:flutter_week_view/src/controller/zoom_controller.dart';
 import 'package:flutter_week_view/src/styles/day_view.dart';
 import 'package:flutter_week_view/src/styles/hours_column.dart';
@@ -22,11 +21,15 @@ typedef DayBarTapCallback = Function(DateTime date);
 typedef CurrentTimeIndicatorBuilder = Widget? Function(
     DayViewStyle dayViewStyle,
     TopOffsetCalculator topOffsetCalculator,
-    double hoursColumnWidth);
+    double hoursColumnWidth,
+    bool isRtl);
 
 /// Allows to build the time displayed on the side border.
 typedef HoursColumnTimeBuilder = Widget? Function(
     HoursColumnStyle dayViewStyle, HourMinute time);
+
+/// Allows to build the background decoration below single time displayed on the side border.
+typedef HoursColumnBackgroundBuilder = Decoration? Function(HourMinute time);
 
 /// A widget which is showing both headers and can be zoomed.
 abstract class ZoomableHeadersWidget<S extends ZoomableHeaderWidgetStyle,
@@ -58,6 +61,9 @@ abstract class ZoomableHeadersWidget<S extends ZoomableHeaderWidgetStyle,
   /// Building method for building the time displayed on the side border.
   final HoursColumnTimeBuilder? hoursColumnTimeBuilder;
 
+  /// Building method for building background decoration below single time displayed on the side border.
+  final HoursColumnBackgroundBuilder? hoursColumnBackgroundBuilder;
+
   /// Triggered when the hours column has been tapped down.
   final HoursColumnTapCallback? onHoursColumnTappedDown;
 
@@ -67,8 +73,12 @@ abstract class ZoomableHeadersWidget<S extends ZoomableHeaderWidgetStyle,
   /// The current day view controller.
   final C controller;
 
+  /// Whether the widget should be aligned from right to left.
+  final bool isRTL;
+
   /// Creates a new zoomable headers widget instance.
   const ZoomableHeadersWidget({
+    Key? key,
     required this.style,
     required this.hoursColumnStyle,
     required this.inScrollableWidget,
@@ -81,7 +91,9 @@ abstract class ZoomableHeadersWidget<S extends ZoomableHeaderWidgetStyle,
     this.onDayBarTappedDown,
     required this.controller,
     this.hoursColumnTimeBuilder,
-  });
+    this.hoursColumnBackgroundBuilder,
+    required this.isRTL,
+  }) : super(key: key);
 }
 
 /// An abstract widget state that shows both headers and can be zoomed.
@@ -119,6 +131,16 @@ abstract class ZoomableHeadersWidgetState<W extends ZoomableHeadersWidget>
   }
 
   @override
+  void onZoomStart(ZoomController controller, ScaleStartDetails details) {
+    /// store current scroll position (vertical) and pinch focal point position (vertical) for future use in onZoomFactorChanged()
+    if (verticalScrollController != null) {
+      controller.contentOffset =
+          (verticalScrollController!.offset + details.localFocalPoint.dy) /
+              controller.zoomFactor;
+    }
+  }
+
+  @override
   void onZoomFactorChanged(
       ZoomController controller, ScaleUpdateDetails details) {
     if (!mounted) {
@@ -131,13 +153,10 @@ abstract class ZoomableHeadersWidgetState<W extends ZoomableHeadersWidget>
         calculateHeight(hourRowHeight) - widgetHeight + widget.style.headerSize;
 
     if (verticalScrollController != null) {
-      if (hourRowHeight < this.hourRowHeight &&
-          verticalScrollController!.position.pixels > maxPixels) {
-        verticalScrollController!.jumpTo(maxPixels);
-      } else {
-        verticalScrollController!
-            .jumpTo(math.min(maxPixels, details.localFocalPoint.dy));
-      }
+      verticalScrollController!.jumpTo(math.min(
+          maxPixels,
+          controller.contentOffset * controller.zoomFactor -
+              details.localFocalPoint.dy));
     }
 
     setState(() {
@@ -159,7 +178,7 @@ abstract class ZoomableHeadersWidgetState<W extends ZoomableHeadersWidget>
   void scheduleScrollToInitialTime() {
     if (shouldScrollToInitialTime) {
       WidgetsBinding.instance
-          ?.addPostFrameCallback((_) => scrollToInitialTime());
+          .addPostFrameCallback((_) => scrollToInitialTime());
     }
   }
 
@@ -172,7 +191,9 @@ abstract class ZoomableHeadersWidgetState<W extends ZoomableHeadersWidget>
 
   /// Scrolls to the initial time.
   void scrollToInitialTime() {
-    if (mounted && verticalScrollController != null) {
+    if (mounted &&
+        verticalScrollController != null &&
+        verticalScrollController!.hasClients) {
       double topOffset = calculateTopOffset(
           HourMinute.fromDateTime(dateTime: widget.initialTime));
       verticalScrollController!.jumpTo(math.min(

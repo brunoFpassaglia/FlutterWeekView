@@ -1,3 +1,21 @@
+## [1.2.2] - 2022-05-19
+
+* Fixed various warnings and errors.
+
+## [1.2.1+1] - 2021-10-27
+
+* Fixed a compilation error.
+
+## [1.2.1] - 2021-10-27
+
+* Now keeps pinch focal point when zoom-in/out (thanks [BiliBalaaaaaa](https://github.com/BiliBalaaaaaa)).
+* `maxZoom` value is now assigned in contructor (thanks [BiliBalaaaaaa](https://github.com/BiliBalaaaaaa)).
+
+## [1.2.0] - 2021-08-15
+
+* Added RTL support (thanks [nirbar89](https://github.com/nirbar89)).
+* Fixed various bugs (thanks [jayjah](https://github.com/jayjah)).
+
 ## [1.1.0] - 2021-03-05
 
 * Migrated to null safety.
